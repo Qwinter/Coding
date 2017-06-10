@@ -3,6 +3,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views import generic
 from .models import Choice, Question
+from django.utils import  timezone
 
 
 class IndexView(generic.ListView):
@@ -10,13 +11,19 @@ class IndexView(generic.ListView):
     context_object_name = 'latest_question_list'
 
     def get_queryset(self):
-        """返回最近发布的5个问卷."""
-        return Question.objects.order_by('-pub_date')[:5]
+        """返回最后五个发布的问题（不包括那些已经出现的问题
+    未来发表）
+        """
+        return Question.objects.filter(
+            pub_date__lte=timezone.now()
+        ).order_by('-pub_date')[:5]
 
 
 class DetailView(generic.DetailView):
     model = Question
     template_name = 'polls/detail.html'
+    def get_queryset(self):
+        return Question.objects.filter(pub_date__lte=timezone.now())
 
 
 class ResultsView(generic.DetailView):
